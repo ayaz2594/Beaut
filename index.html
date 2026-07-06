@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beauty — Parfümeriya Kataloqu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --plum:#3A2135;
+  --plum-soft:#5C3A55;
+  --blush:#FBF2F0;
+  --blush-deep:#F3E1DD;
+  --gold:#B98A45;
+  --gold-soft:#E8D5B8;
+  --white:#FFFFFF;
+  --ink:#2A1826;
+  --muted:#8A6F84;
+  --danger:#B33A3A;
+  --radius:18px;
+  --shadow:0 10px 30px rgba(58,33,53,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Manrope',sans-serif;background:var(--blush);color:var(--ink);min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,textarea,select{font-family:inherit;font-size:15px}
+img{display:block;max-width:100%}
+
+/* ---------- Header ---------- */
+header{position:sticky;top:0;z-index:50;background:rgba(251,242,240,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--blush-deep)}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 20px}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0;user-select:none}
+.brand svg{height:44px;width:auto}
+.brand-name{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:30px;color:var(--plum);letter-spacing:.5px;line-height:1}
+.brand-sub{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
+.search-wrap{flex:1;max-width:440px;position:relative}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.45}
+#searchInput{width:100%;padding:11px 14px 11px 42px;border:1px solid var(--blush-deep);border-radius:999px;background:var(--white);color:var(--ink);outline:none;transition:border-color .2s}
+#searchInput:focus{border-color:var(--gold)}
+.header-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.icon-btn{position:relative;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--white);border:1px solid var(--blush-deep);transition:transform .15s,border-color .2s}
+.icon-btn:hover{transform:translateY(-2px);border-color:var(--gold)}
+.icon-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.cart-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--gold);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.cart-badge.hidden{display:none}
+
+/* ---------- Hero ---------- */
+.hero{max-width:1200px;margin:0 auto;padding:32px 20px 6px}
+.hero h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(28px,4.5vw,46px);color:var(--plum);line-height:1.08}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero p{color:var(--muted);margin-top:8px;max-width:520px;font-size:15px}
+
+/* ---------- Kateqoriyalar ---------- */
+.chips{max-width:1200px;margin:0 auto;padding:18px 20px 4px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:9px 18px;border-radius:999px;white-space:nowrap;background:var(--white);border:1px solid var(--blush-deep);color:var(--plum-soft);font-weight:600;font-size:14px;transition:all .2s}
+.chip:hover{border-color:var(--gold)}
+.chip.active{background:var(--plum);color:#fff;border-color:var(--plum)}
+.count-line{max-width:1200px;margin:0 auto;padding:10px 20px 0;font-size:13px;color:var(--muted)}
+
+/* ---------- Məhsul toru ---------- */
+.grid{max-width:1200px;margin:0 auto;padding:16px 20px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+.card{background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .2s}
+.card:hover{transform:translateY(-4px)}
+.card-img{aspect-ratio:4/3;background:linear-gradient(145deg,var(--blush-deep),var(--gold-soft));display:flex;align-items:center;justify-content:center;overflow:hidden}
+.card-img img{width:100%;height:100%;object-fit:cover}
+.card-img .noimg{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:30px;color:var(--plum-soft);opacity:.45}
+.card-body{padding:13px 15px 15px;display:flex;flex-direction:column;gap:7px;flex:1}
+.card-cat{font-size:10.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold);font-weight:800}
+.card-name{font-weight:700;font-size:14.5px;line-height:1.35}
+.card-desc{font-size:13px;color:var(--muted);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.variants{display:flex;gap:6px;flex-wrap:wrap}
+.v-pill{padding:6px 13px;border-radius:999px;border:1.5px solid var(--blush-deep);font-weight:700;font-size:12.5px;color:var(--plum-soft);background:var(--white);transition:all .15s}
+.v-pill.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.card-foot{margin-top:auto;padding-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.price{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;color:var(--plum)}
+.price small{font-size:15px;color:var(--gold)}
+.add-btn{padding:9px 16px;border-radius:999px;background:var(--plum);color:#fff;font-weight:700;font-size:13px;transition:background .2s;white-space:nowrap}
+.add-btn:hover{background:var(--plum-soft)}
+.ask-btn{padding:9px 16px;border-radius:999px;background:var(--gold);color:#fff;font-weight:700;font-size:13px}
+.noprice{font-size:13px;color:var(--muted);font-weight:600}
+.stepper{display:flex;align-items:center;gap:2px;background:var(--blush);border-radius:999px;padding:3px}
+.stepper button{width:30px;height:30px;border-radius:50%;background:var(--white);font-size:17px;font-weight:800;color:var(--plum);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.stepper span{min-width:26px;text-align:center;font-weight:800;font-size:14px}
+.empty-state{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--muted)}
+.empty-state .big{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:30px;color:var(--plum);margin-bottom:8px}
+.load-more{grid-column:1/-1;text-align:center;padding:8px 0 4px}
+
+/* ---------- Səbət ---------- */
+.overlay{position:fixed;inset:0;background:rgba(42,24,38,.45);z-index:90;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(430px,100%);z-index:100;background:var(--white);box-shadow:-16px 0 50px rgba(58,33,53,.18);transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.drawer.open{transform:translateX(0)}
+.drawer-head{padding:18px 20px;border-bottom:1px solid var(--blush-deep);display:flex;align-items:center;justify-content:space-between}
+.drawer-head h2{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:26px;color:var(--plum)}
+.drawer-body{flex:1;overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:12px}
+.cart-item{display:flex;gap:10px;align-items:center}
+.cart-item .thumb{width:54px;height:54px;border-radius:12px;overflow:hidden;flex-shrink:0;background:linear-gradient(145deg,var(--blush-deep),var(--gold-soft));display:flex;align-items:center;justify-content:center;font-size:20px}
+.cart-item .thumb img{width:100%;height:100%;object-fit:cover}
+.cart-item .info{flex:1;min-width:0}
+.cart-item .info .n{font-weight:700;font-size:13px;line-height:1.3}
+.cart-item .info .p{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:2px}
+.rm-btn{color:var(--muted);font-size:17px;padding:4px}
+.rm-btn:hover{color:var(--danger)}
+.drawer-foot{padding:16px 20px;border-top:1px solid var(--blush-deep);display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto}
+.total-row{display:flex;justify-content:space-between;align-items:center}
+.total-row .lbl{font-weight:700;color:var(--muted)}
+.total-row .val{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;color:var(--plum)}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;letter-spacing:.4px}
+.field input,.field textarea,.field select{width:100%;padding:10px 12px;border:1px solid var(--blush-deep);border-radius:10px;background:var(--blush);outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--gold);background:#fff}
+.wa-btn{width:100%;padding:14px;border-radius:14px;background:#25D366;color:#fff;font-weight:800;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:10px;transition:filter .2s}
+.wa-btn:hover{filter:brightness(1.06)}
+.wa-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- Admin ---------- */
+.admin-panel{position:fixed;inset:0;z-index:110;background:var(--blush);overflow-y:auto;display:none}
+.admin-panel.open{display:block}
+.admin-inner{max-width:880px;margin:0 auto;padding:24px 20px 80px}
+.admin-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.admin-top h2{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:32px;color:var(--plum)}
+.panel-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+.panel-card h3{font-size:16px;margin-bottom:14px;color:var(--plum)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid .full{grid-column:1/-1}
+.btn{padding:11px 20px;border-radius:12px;font-weight:700;font-size:14px;background:var(--plum);color:#fff;transition:background .2s}
+.btn:hover{background:var(--plum-soft)}
+.btn.gold{background:var(--gold)}
+.btn.ghost{background:var(--blush);color:var(--plum)}
+.btn.dngr{background:var(--danger)}
+.btn.sm{padding:7px 12px;font-size:12.5px;border-radius:9px}
+.admin-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto}
+.admin-row{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--blush-deep);border-radius:12px}
+.admin-row .thumb{width:44px;height:44px;border-radius:9px;overflow:hidden;background:var(--blush-deep);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.admin-row .thumb img{width:100%;height:100%;object-fit:cover}
+.admin-row .meta{flex:1;min-width:0}
+.admin-row .meta .n{font-weight:700;font-size:13.5px}
+.admin-row .meta .s{font-size:12px;color:var(--muted)}
+.admin-search{margin-bottom:10px}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:8px}
+.img-preview{width:90px;height:90px;border-radius:12px;object-fit:cover;border:1px solid var(--blush-deep)}
+.warn{background:#FFF6E5;border:1px solid #F0D9A8;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;color:#7A5A1E;margin-bottom:14px}
+.login-card{max-width:420px;margin:0 auto}
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--plum);color:#fff;padding:12px 22px;border-radius:999px;font-weight:700;font-size:14px;z-index:200;opacity:0;transition:all .3s;box-shadow:var(--shadow);pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+footer{max-width:1200px;margin:30px auto 0;padding:24px 20px 34px;border-top:1px solid var(--blush-deep);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.admin-link{color:var(--muted);font-size:12px;text-decoration:underline}
+.admin-link:hover{color:var(--gold)}
+
+@media(max-width:640px){
+  .header-inner{flex-wrap:wrap}
+  .search-wrap{order:3;max-width:100%;flex-basis:100%}
+  .grid{grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+  .form-grid{grid-template-columns:1fr}
+  .card-name{font-size:13px}
+  .price{font-size:20px}
+  .v-pill{padding:5px 10px;font-size:11.5px}
+  .add-btn{padding:8px 12px;font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand" title="Beauty">
+      <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" aria-label="Beauty logo">
+        <rect x="24" y="4" width="12" height="7" rx="2" fill="#B98A45"/>
+        <rect x="26.5" y="11" width="7" height="5" fill="#3A2135"/>
+        <path d="M30 16 C14 22 10 34 12 44 C14 53 22 57 30 57 C38 57 46 53 48 44 C50 34 46 22 30 16 Z" fill="#3A2135"/>
+        <path d="M22 32 C24 27 28 25 31 25 C26 28 24 33 24 38 C24 43 26 47 29 50 C24 48 20 43 20 38 C20 36 21 34 22 32 Z" fill="#B98A45" opacity=".85"/>
+        <circle cx="38" cy="30" r="2.2" fill="#E8D5B8"/>
+        <circle cx="41" cy="37" r="1.4" fill="#E8D5B8" opacity=".7"/>
+      </svg>
+      <div>
+        <div class="brand-name">Beauty</div>
+        <div class="brand-sub">Parfümeriya · Kosmetika</div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3A2135" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" type="search" placeholder="Ətir axtar... (məs: Sauvage)" autocomplete="off">
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="cartBtn" aria-label="Səbət">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#3A2135" stroke-width="2"><path d="M6 7h12l1.5 12.5a2 2 0 0 1-2 2.5H6.5a2 2 0 0 1-2-2.5L6 7Z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg>
+        <span class="cart-badge hidden" id="cartBadge">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>Gözəlliyin öz <em>kataloqu</em></h1>
+  <p>Ölçünü seç (30 ml / 50 ml), səbətə əlavə et — sifarişin bir toxunuşla WhatsApp-a göndərilsin.</p>
+</section>
+
+<nav class="chips" id="chips" aria-label="Kateqoriyalar"></nav>
+<div class="count-line" id="countLine"></div>
+<main class="grid" id="grid" aria-live="polite"></main>
+
+<footer>
+  <span>© <span id="year"></span> Beauty · Bütün hüquqlar qorunur</span>
+  <button class="admin-link" id="adminOpenBtn">Admin paneli</button>
+</footer>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-label="Səbət">
+  <div class="drawer-head">
+    <h2>Səbətim</h2>
+    <button class="icon-btn" id="closeDrawer" aria-label="Bağla">✕</button>
+  </div>
+  <div class="drawer-body" id="cartBody"></div>
+  <div class="drawer-foot">
+    <div class="total-row">
+      <span class="lbl">Cəmi:</span>
+      <span class="val" id="cartTotal">0 ₼</span>
+    </div>
+    <div class="field">
+      <label for="custName">Ad, soyad (istəyə bağlı)</label>
+      <input id="custName" placeholder="Məs: Aygün Məmmədova">
+    </div>
+    <div class="field">
+      <label for="custNote">Qeyd / ünvan (istəyə bağlı)</label>
+      <textarea id="custNote" rows="2" placeholder="Çatdırılma ünvanı və ya əlavə qeyd"></textarea>
+    </div>
+    <button class="wa-btn" id="sendWa">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.5 14.1c-.2.7-1.3 1.3-1.9 1.4-.5.1-1.1.1-1.8-.1-.4-.1-1-.3-1.7-.6-2.9-1.3-4.8-4.2-5-4.4-.1-.2-1.2-1.6-1.2-3s.7-2.1 1-2.4c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.1.1.3 0 .5-.1.2-.1.3-.3.5l-.4.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1.1 2.2 1.4 2.5 1.5.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 1.7.8 2 1 .3.2.5.2.6.4.1.1.1.7-.1 1.4Z"/></svg>
+      Sifarişi WhatsApp-la göndər
+    </button>
+  </div>
+</aside>
+
+<!-- ADMIN -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-inner">
+    <div class="admin-top">
+      <h2>Admin paneli</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost" id="logoutBtn" style="display:none">Çıxış</button>
+        <button class="btn ghost" id="adminCloseBtn">← Sayta qayıt</button>
+      </div>
+    </div>
+
+    <div class="panel-card" id="cfgWarn" style="display:none">
+      <div class="warn">⚠️ Supabase hələ qoşulmayıb. <b>index.html</b> faylının yuxarısındakı <b>SUPABASE_URL</b> və <b>SUPABASE_ANON_KEY</b> dəyərlərini öz layihənin məlumatları ilə əvəz et (bax: TELIMAT.md). Hazırda sayt daxili siyahı ilə oxu rejimində işləyir.</div>
+    </div>
+
+    <div class="panel-card login-card" id="adminLogin" style="display:none">
+      <h3>🔐 Admin girişi</h3>
+      <div class="field" style="margin-bottom:10px">
+        <label for="loginEmail">E-poçt</label>
+        <input id="loginEmail" type="email" autocomplete="username" placeholder="admin@example.com">
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label for="loginPass">Şifrə</label>
+        <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button class="btn gold" id="loginBtn" style="width:100%">Daxil ol</button>
+      <p class="hint">Bu hesab Supabase panelindən (Authentication → Users) yaradılır.</p>
+    </div>
+
+    <div id="adminContent" style="display:none">
+
+    <div class="panel-card">
+      <h3>⚙️ Mağaza ayarları</h3>
+      <div class="field" style="max-width:420px">
+        <label for="setWa">WhatsApp nömrəsi (ölkə kodu ilə, boşluqsuz)</label>
+        <input id="setWa" placeholder="Məs: 994501234567">
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn gold" id="saveSettings">Ayarları yadda saxla</button>
+      </div>
+      <p class="hint">Dəyişikliklər dərhal bütün müştərilərə görünür.</p>
+    </div>
+
+    <div class="panel-card">
+      <h3 id="formTitle">➕ Yeni məhsul əlavə et</h3>
+      <div class="form-grid">
+        <div class="field full">
+          <label for="pName">Məhsulun adı *</label>
+          <input id="pName" placeholder="Məs: CHANEL - BLEU DE CHANEL DELUX">
+        </div>
+        <div class="field">
+          <label for="pP30">30 ml qiyməti (₼)</label>
+          <input id="pP30" type="number" step="0.01" min="0" placeholder="20">
+        </div>
+        <div class="field">
+          <label for="pP50">50 ml qiyməti (₼)</label>
+          <input id="pP50" type="number" step="0.01" min="0" placeholder="30">
+        </div>
+        <div class="field">
+          <label for="pCat">Kateqoriya *</label>
+          <select id="pCat">
+            <option>Kişi</option>
+            <option>Qadın</option>
+            <option>Uniseks</option>
+            <option>Otaq ətirləri</option>
+            <option>Digər</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="pImg">Şəkil faylı (avtomatik sıxılır)</label>
+          <input id="pImg" type="file" accept="image/*">
+        </div>
+        <div class="field full">
+          <label for="pImgUrl">və ya şəkil linki (URL)</label>
+          <input id="pImgUrl" type="url" placeholder="https://... .jpg / .png / .webp">
+        </div>
+        <div class="field full">
+          <label for="pDesc">Təsvir</label>
+          <textarea id="pDesc" rows="2" placeholder="Məhsul haqqında qısa məlumat"></textarea>
+        </div>
+        <div class="full" id="previewWrap" style="display:none">
+          <img class="img-preview" id="imgPreview" alt="Şəkil önizləmə">
+        </div>
+      </div>
+      <p class="hint">Hər iki qiymət boş qalsa, məhsulda "-- ₼" göstərilir və səbətə əlavə olunmur (qiyməti sonra buradan təyin edə bilərsən).</p>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn" id="saveProduct">Məhsulu yadda saxla</button>
+        <button class="btn ghost" id="cancelEdit" style="display:none">Ləğv et</button>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <h3>📥 Toplu import (CSV)</h3>
+      <p class="hint" style="margin:0 0 10px">Hər sətirdə: <b>Ad;Qiymət30ml;Qiymət50ml;Kateqoriya;Təsvir;ŞəkilLinki</b>. Qiymətlər, təsvir və link boş qala bilər.</p>
+      <div class="field">
+        <textarea id="csvInput" rows="4" placeholder="CREED - AVENTUS DELUX;20;30;Kişi;Odunsu-meyvəli ətir"></textarea>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn gold" id="importCsv">İmport et</button>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <h3>📦 Məhsullar (<span id="prodCount">0</span>)</h3>
+      <div class="field admin-search">
+        <input id="adminSearch" placeholder="Siyahıda axtar...">
+      </div>
+      <div class="admin-list" id="adminList"></div>
+      <div style="margin-top:12px">
+        <button class="btn dngr sm" id="resetCatalog">Kataloqu ilkin siyahıya qaytar</button>
+      </div>
+    </div>
+
+    </div><!-- /adminContent -->
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   Beauty — Supabase + GitHub Pages versiyası
+   1) Aşağıdakı iki dəyəri öz Supabase layihənlə əvəz et
+   2) TELIMAT.md-dəki addımları izlə
+========================================================= */
+const SUPABASE_URL      = 'https://avquxxqoykgvxpmrfzbb.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2cXV4eHFveWtndnhwbXJmemJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTIwMDQsImV4cCI6MjA5ODkyODAwNH0.xrVok6_dnNiL1rBzj-ZCGf2-1qmFHCL2fmGTxZYiftU';
+
+const SEED = [{"id":"e001","name":"AFNAN - TRIBUTE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e002","name":"AJMAL - AMBER WOOD DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e003","name":"AJMAL - AMBER WOOD II","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e004","name":"AJMAL - QAFIYA 2 DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e005","name":"AL RAHAB DALAL DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e006","name":"ALEXANDRE.J - BLACK MUSCS - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e007","name":"ALFRED DUNHILL - DESIRE DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e008","name":"ALFRED DUNHILL - DESIRE BLUE DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e009","name":"AMOR EGZOTIC DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e010","name":"AMOUAGE - EPIC MEN DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e011","name":"AMOUAGE - GUIDANCE DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e012","name":"AMOUAGE - INTERLUDE DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e013","name":"AMOUAGE - REFLECTION WOMEN - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e014","name":"ANNA SUI - LUCK WISH DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e015","name":"ANTOINE BARROIS - TILIA MARC","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e016","name":"ANTONIO BANDERAS - BLUE SEDUCTION","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e017","name":"ANTONIO BANDERAS - HER GOLDEN SECRET","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e018","name":"ARMAND BASI - IN RED DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e019","name":"ATTAR COLLECTION - MUSK KASHMIR (TOP)","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e020","name":"AVON - INCANDESSENCE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e021","name":"AVON - LITTLE BLACK DRESS DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e022","name":"AVON - PRIMA /DREAMS DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e023","name":"AVON - TODAY DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e024","name":"AVON - WISH OF LOVE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e025","name":"AZZARO - CHROME DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e026","name":"BACCARAT - 540 ROUGE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e027","name":"BACCARAT - OUD SATIN MOOD (TOP)","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e028","name":"BACCARAT - ROUGE 540 II","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e029","name":"BOND No. 9 N.Y. - GREENWICH VILLAGE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e030","name":"BOND No. 9 N.Y. - LAFAYETTE STREET DELUXE","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e031","name":"BURBERRY - GODDESS DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e032","name":"BURBERRY - HER (Eau De Parfum) DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e033","name":"BURBERRY - HERO DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e034","name":"BURBERRY - MY BURBERRY DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e035","name":"BURBERRY - WEEKEND DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e036","name":"BVLGARI - AQVA DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e037","name":"BVLGARI - AU THE NOIR (EDP) DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e038","name":"BVLGARI - EMPRY LE GEMME DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e039","name":"BVLGARI - GYAN LE GEMME DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e040","name":"BVLGARI - JASMIN NOIR DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e041","name":"BVLGARI - MAN IN BLACK \"ALL BLACK\"","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e042","name":"BVLGARI - OMNIA CRYSTALLINE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e043","name":"BVLGARI - TYGAR LE GEMME DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e044","name":"BVLGARI - TYGAR LE GEMME II","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e045","name":"BYREDO - BAL D`AFRIQUE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e046","name":"BYREDO - BIBLOTHEQUE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e047","name":"BYREDO - MOJAVE GHOST","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e048","name":"CACHAREL - AMOR AMOR DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e049","name":"CALVIN KLEIN - EUPHORIA DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e050","name":"CAPITAN BLACK DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e051","name":"CAROLINA HERRERA - 212 MEN DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e052","name":"CAROLINA HERRERA - 212 SEXY DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e053","name":"CAROLINA HERRERA - 212 VIP WOMEN DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e054","name":"CAROLINA HERRERA - CHIC MEN DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e055","name":"CAROLINA HERRERA - GOOD GIRL DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e056","name":"CAROLINA HERRERA - LA BOMBA DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e057","name":"CARTIER - DECLARATION DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e058","name":"CARTIER - LA PANTHERE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e059","name":"CHANEL - (FRESH) CHANCE EAU FRAICHE","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e060","name":"CHANEL - ALLURE HOMME SPORT DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e061","name":"CHANEL - BLEU DE CHANEL DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e062","name":"CHANEL - CHANCE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e063","name":"CHANEL - CHANCE EAU TENDRE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e064","name":"CHANEL - COCO CHANEL DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e065","name":"CHANEL - COCO MADEMOISELLE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e066","name":"CHANEL - COROMANDEL DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e067","name":"CHANEL - EGOISTE PLATINUM DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e068","name":"CHANEL - GABRIELLE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e069","name":"CHANEL - No 5 DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e070","name":"CHASTITEL DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e071","name":"CHLOE - EAU DE PARFUM DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e072","name":"CHLOE - NOMADE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e073","name":"CHOCOLATE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e074","name":"CHRISTIAN DIOR - DIOR ADDICT 2 DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e075","name":"CHRISTIAN DIOR - DIOR HOMME SPORT","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e076","name":"CHRISTIAN DIOR - FAHRENHEIT DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e077","name":"CHRISTIAN DIOR - FOREVER AND EVER DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e078","name":"CHRISTIAN DIOR - HYPNOTIC POISON DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e079","name":"CHRISTIAN DIOR - J`ADORE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e080","name":"CHRISTIAN DIOR - MIDNIGHT POISON DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e081","name":"CHRISTIAN DIOR - MISS DIOR BLOOMING","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e082","name":"CHRISTIAN DIOR - MISS DIOR CHERIE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e083","name":"CHRISTIAN DIOR - SAUVAGE DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e084","name":"CHRISTIAN DIOR - SAUVAGE ELIXIR DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e085","name":"CHRISTIAN DIOR - SAUVAGE II","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e086","name":"CHRISTIAN DIOR - TRAFALCAR","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e087","name":"CREED - AVENTUS - DELUX TOP (M)","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e088","name":"CREED - AVENTUS DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e089","name":"CREED - AVENTUS ABSOLU","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e090","name":"CREED - AVENTUS EXP","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e091","name":"CREED - SILVER MOUNTAIN WATER DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e092","name":"D&G - \"K\" By DOLPHIN DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e093","name":"D&G - ANTHOLOGY L`IMPERATRICE 3 DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e094","name":"D&G - DEVATION","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e095","name":"D&G - DOLCE PEONY DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e096","name":"D&G - Q (QUEEN) - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e097","name":"D&G - LIGHT BLUE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e098","name":"D&G - LIGHT BLUE MEN DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e099","name":"D&G - THE ONE FOR MEN","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e100","name":"D&G - THE ONE WOMEN DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e101","name":"DAVIDOFF - COOL WATER DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e102","name":"DIFFUZER MG ALL","cat":"Otaq ətirləri","desc":"","variants":[]},{"id":"e103","name":"DIMA BILAN DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e104","name":"DUAL CENNET DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e105","name":"E. ARMANI - STRONGER WITH YOU DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e106","name":"E. ARMANI - STRONGER WITH YOU INTENSE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e107","name":"EX NIHILO - BLUE TALISMEN","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e108","name":"EX NIHILO - FLEUR NARCOTIQUE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e109","name":"EX NIHILO - FLEUR NARCOTIQUE II","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e110","name":"EXPLORE DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e111","name":"ELIE SAAB - LE PARFUM DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e112","name":"ELIZABETH ARDEN - WHITE TEA DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e113","name":"ESCADA - COLLECTION DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e114","name":"ESCADA - SEXY GRAFFITI DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e115","name":"ESCADA - TROPICAL PUNCH","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e116","name":"ESSENTIAL PARFUM - BOIS IMPERIAL DELUXE","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e117","name":"EV ETIRLERI","cat":"Otaq ətirləri","desc":"","variants":[]},{"id":"e118","name":"FATIMA ESENCJA - WHITE MUSK DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e119","name":"FENDI DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e120","name":"G. ARMANI - ACQUA DI GIO DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e121","name":"G. ARMANI - ARMANI CODE CASHMERE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e122","name":"G. ARMANI - BLACK CODE DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e123","name":"G. ARMANI - MY WAY DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e124","name":"G. ARMANI - SI DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e125","name":"G. ARMANI PRIVE - ROSE D`ARABIE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e126","name":"GANYMEDE - ANTONI BARRIOUS DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e127","name":"GANYMEDE - ANTONI BARRIOUS II","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e128","name":"GIORDANI - GOLD DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e129","name":"GIVENCHY - ANGE OU DEMON LE SECRET","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e130","name":"GIVENCHY - DAHLI DIVINE DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e131","name":"GIVENCHY - GENTLEMEN ONLY DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e132","name":"GIVENCHY - IRRESISTIBLE 2021 DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e133","name":"GIVENCHY - L'INTERDIT DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e134","name":"GIVENCHY - REVE D`ESCAPADE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e135","name":"GIVENCHY - ULTRAMARINE INTENSE DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e136","name":"GUCCI - BAMBOO DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e137","name":"GUCCI - BLOOM DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e138","name":"GUCCI - FLORA DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e139","name":"GUCCI - GUILTY FOR MEN DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e140","name":"GUCCI - GUILTY FOR WOMEN DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e141","name":"GUCCI - RUSH 2 DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e142","name":"GUERLAIN - AQUA ALLERGORIA MANDARINE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e143","name":"GUERLAIN - IDYLLE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e144","name":"GUERLAIN - SANTAL ROYAL DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e145","name":"HEREMI AKSA DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e146","name":"HERMES - AMBRE NARGUILE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e147","name":"HERMES - Terre d'Hermes DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e148","name":"HUGO BOSS - BALDESSARINI DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e149","name":"HUGO BOSS - MA VIE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e150","name":"HUGO BOSS - MEN DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e151","name":"HUNCA - CALDION DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e152","name":"HUNCA - JAGLER DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e153","name":"XERJOFF - 1861 RENAISSANCE - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e154","name":"XERJOFF - GRAN BALLO DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e155","name":"XERJOFF - LIRA DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e156","name":"XERJOFF - MEFISTO DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e157","name":"XERJOFF - MORE THAN WORDS DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e158","name":"XERJOFF - MORE THAN WORDS II","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e159","name":"XERJOFF - NAXOS DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e160","name":"XERJOFF - TERRONI 21 DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e161","name":"INITIO PARFUMS PRIVES - OUD FOR","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e162","name":"INITIO PARFUMS PRIVES - OUD FOR","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e163","name":"INITIO PARFUMS PRIVE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e164","name":"ISSEY MIYAKE - L`EAU D`ISSEY DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e165","name":"ISSEY MIYAKE - L'EAU BLEUE POUR HOMME","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e166","name":"J. LOPEZ - STILL DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e167","name":"JASEMEN DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e168","name":"JASMIN DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e169","name":"JEAN PAUL GAULTIER - GAULTIER DIVINE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e170","name":"JEAN PAUL GAULTIER - LE BEAU LE PARFUM","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e171","name":"JEAN PAUL GAULTIER - LE MALE TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e172","name":"JEAN PAUL GAULTIER - SCANDAL BY NIGHT","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e173","name":"JEAN PAUL GAULTIER - SCANDAL MEN DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e174","name":"JEAN PAUL GAULTIER - SO SCANDAL DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e175","name":"JO MALONE LONDON - COLOGNE INTENSE","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e176","name":"KAJAL - ALMAZ DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e177","name":"KARIZMA","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e178","name":"KAYALI - EDEN JUICY APPLE 01 (TOP)","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e179","name":"KAYALI - VANILLA 28","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e180","name":"KENZO - ELECTRIC WAVE POUR FEMME DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e181","name":"KENZO - HOME MARINI DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e182","name":"KENZO - L`EAU PAR DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e183","name":"KENZO - MEN DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e184","name":"KENZO - WORLD - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e185","name":"KENZO - WORLD POWER - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e186","name":"KILIAN - ANGELS SHARE DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e187","name":"KILIAN - BLACK PHANTOM MEMENTO MORI","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e188","name":"KILIAN - GOOD GIRL GONE BAD","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e189","name":"KILIAN - INTOXICATED - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e190","name":"KILIAN - LOVE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e191","name":"KILIAN - WHITE CRYSTAL DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e192","name":"LACOSTE - ESSENTIAL DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e193","name":"LACOSTE - POUR FEMME DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e194","name":"LACOSTE - RED DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e195","name":"LACOSTE - WHITE DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e196","name":"LANCOME - CLIMAT DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e197","name":"LANCOME - IDÔLE LE PARFUM DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e198","name":"LANCOME - LA VIE EST BELLE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e199","name":"LANCOME - MAGIE NOIRE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e200","name":"LANCOME - MIRACLE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e201","name":"LANCOME - TRESOR MIDNIGHT ROSE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e202","name":"LANVIN - ECLAT DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e203","name":"LANVIN - ECLAT SPORT DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e204","name":"LANVIN - MARRY ME DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e205","name":"LANVIN - MODERN PRINCESS DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e206","name":"LATTAFA - KHAMRAH","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e207","name":"LATTAFA - YARA DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e208","name":"LOUIS VUITTON - AFTERNOON SWIM DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e209","name":"LOUIS VUITTON - AMBRE NO MADE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e210","name":"LOUIS VUITTON - ATTRAPE-REVES DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e211","name":"LOUIS VUITTON - ELVES DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e212","name":"LOUIS VUITTON - HEURES D'ABSENCE - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e213","name":"LOUIS VUITTON - IMAGINATION DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e214","name":"LOUIS VUITTON - L`IMMENSITE DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e215","name":"LOUIS VUITTON - L`IMMENSITE II","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e216","name":"LOUIS VUITTON - ORAGE DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e217","name":"LOUIS VUITTON - PACIFIC CHIL DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e218","name":"LOUIS VUITTON - STELLAR TIMES","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e219","name":"LOUIS VUITTON - SYMPHONY DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e220","name":"LUSIA - (LUCIA) DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e221","name":"MAISON CRIVELLI - OUD MARACUJA DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e222","name":"MANCERA - CEDRAT BOISE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e223","name":"MANCERA - RED TOBACCO DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e224","name":"MANCERA - ROSES VANILLE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e225","name":"MARC ANTONO BARRES - ALDEBARON DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e226","name":"MARC JACOBS - DECADENCE DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e227","name":"MARIJUANA DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e228","name":"MEGAM-I IBRAHIM","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e229","name":"MEMO - AFRICAN LEATHER DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e230","name":"MEMO - MARFA DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e231","name":"MOLECULE - 01 IRIS DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e232","name":"MOLECULE 01 - ONE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e233","name":"MOLECULE 02 (III)","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e234","name":"MOLECULE 02 DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e235","name":"MOLECULES - ESCENTRIC 04 DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e236","name":"MOLECULES - ESCENTRIC 05 DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e237","name":"MONTALE - ARABIANS TONKA DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e238","name":"MONTALE - BLACK AOUD DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e239","name":"MONTALE - CRAZY IN LOVE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e240","name":"MONTALE - INTENSE CAFÉ DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e241","name":"MONTALE - ROSES ELIXIR DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e242","name":"MONTALE - ROSES MUSK DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e243","name":"MONTALE - STARRY NIGHT DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e244","name":"MONTALE - VANILLE ABSOLU DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e245","name":"MONTBLANC - LEGEND DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e246","name":"MOSCHINO - FUNNY DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e247","name":"MOSCHINO - TOY 2 BUBBLE GUM DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e248","name":"MOSCHINO - TOY BOY DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e249","name":"NARCISO RODRIGUEZ - FOR HER DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e250","name":"NARCISO RODRIGUEZ - POUDREE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e251","name":"NASOMATTO - BLACK AFGANO DELUXE","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e252","name":"NASOMATTO - NARCOTIC VENUS DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e253","name":"NEJMA - NEJMA 7 DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e254","name":"NINA RICCI - LOVE IN PARIS DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e255","name":"NINA RICCI - NINA 2006 DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e256","name":"NISHANE - HACIVAT DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e257","name":"ORIFLAME - AMBER ELIXIR DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e258","name":"ORIFLAME - DVINE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e259","name":"ORIFLAME - ECLAT SPORT DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e260","name":"ORLOV PARIS - FANCY RED - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e261","name":"ORTO PARISI - MEGAMARE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e262","name":"ORTO PARISI - MEGAMARE II","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e263","name":"ORTO PARISI - MEGAMARE III","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e264","name":"PACO RABANNE - 1 MILLION DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e265","name":"PACO RABANNE - INVICTUS DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e266","name":"PACO RABANNE - INVICTUS VICTORY DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e267","name":"PACO RABANNE - LADY MILLION DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e268","name":"PACO RABANNE - OLYMPEA DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e269","name":"PACO RABANNE - ULTRAVIOLET DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e270","name":"PARFUMS DE MARLY - LAYTON - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e271","name":"PARFUMS DE MARLY - ATHAIR","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e272","name":"PARFUMS DE MARLY - DELINA","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e273","name":"PARFUMS DE MARLY - DELINA DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e274","name":"PARFUMS DE MARLY - PEGASUS DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e275","name":"PARFUMS DE MARLY - VALAYA","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e276","name":"PRADA - CANDY DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e277","name":"PRADA - CARBON DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e278","name":"PRADA - PARADOXE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e279","name":"RALPH LAUREN - POLO BLUE DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e280","name":"RAMON MONEGAL - FLAMENCO EXTRAIT DE","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e281","name":"REMY LATOUR - CIGAR (SIQAR) DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e282","name":"RICARDO VERON - APHRODISIAC DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e283","name":"ROBERTO CAVALLI - PARADISO ASSOLUTO","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e284","name":"ROJA - ELYSIUM DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e285","name":"ROJA - ELYSUM II","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e286","name":"ROJA DOVE - OLIGARCH MEN DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e287","name":"ROSE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e288","name":"ROSENDO MATEU - N 5 DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e289","name":"Salvatore Ferragamo - AMO FERRAGAMO","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e290","name":"Salvatore Ferragamo - ATTIMO DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e291","name":"Salvatore Ferragamo - INCANTO SHINE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e292","name":"SERGIO TACCHINI - O ZONE WOMAN","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e293","name":"SHAHRAZARD DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e294","name":"SHAIK No 77 DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e295","name":"SHISEIDO - GINZA DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e296","name":"SHISEIDO - ZEN DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e297","name":"SISLEY - SOIR DE LUNE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e298","name":"SOSPIRO - ACCENTO DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e299","name":"SOSPIRO - ACCENTO II","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e300","name":"SOSPIRO - ERBA PURA DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e301","name":"SOSPIRO - ERBA PURA II","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e302","name":"THIERRY MUGLER - ALIEN","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e303","name":"TIZIANA TERENZI - ANDROMEDA DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e304","name":"TIZIANA TERENZI - CASANOVA DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e305","name":"TIZIANA TERENZI - GUMIN DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e306","name":"TIZIANA TERENZI - GUMIN II","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e307","name":"TIZIANA TERENZI - KIRKE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e308","name":"TIZIANA TERENZI - KIRKE II","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e309","name":"TIZIANA TERENZI - SIRRAH - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e310","name":"TIZIANA TERENZI - TABIT - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e311","name":"TOM FORD - BITTER PEACH DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e312","name":"TOM FORD - BLACK ORCHID DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e313","name":"TOM FORD - FUCKING FABULOUS","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e314","name":"TOM FORD - LOST CHERRY DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e315","name":"TOM FORD - NOIR EXTREME","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e316","name":"TOM FORD - OMBRE LEATHER DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e317","name":"TOM FORD - OUD WOOD DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e318","name":"TOM FORD - TOBACCO VANILLE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e319","name":"TOM FORD - VANILLA SEX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e320","name":"TRUSSARDI - DELICATE ROSE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e321","name":"TRUSSARDI - DONNA DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e322","name":"TRUSSARDI - MY LAND DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e323","name":"TRUSSARDI - UOMO DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e324","name":"VALENTINA - VALENTINO DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e325","name":"VALENTINO - DONNA DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e326","name":"VERSACE - BRIGHT CRYSTAL DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e327","name":"VERSACE - CRYSTAL NOIR DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e328","name":"VERSACE - DYLAN PURPLE DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e329","name":"VERSACE - Eau Fraiche DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e330","name":"VERSACE - EROS DELUX","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e331","name":"VERSACE - VANITAS DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e332","name":"VERSACE - VERSENSE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e333","name":"VERSACE - VERSUS WOMEN DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e334","name":"VERTUS - PATCHOULI DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e335","name":"VERTUS - PATCHOULI II","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e336","name":"VICTORIA`S SECRET - BARE VANILLA NOIR","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e337","name":"VICTORIA`S SECRET - BOMBSHELL DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e338","name":"VICTORIA`S SECRET - BOMBSHELL INTENSE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e339","name":"VICTORIA`S SECRET - DIAMOND SKY - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e340","name":"VICTORIA`S SECRET - NIGHT","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e341","name":"VICTORIA`S SECRET - ROSE BERGAMOT DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e342","name":"VICTORIA`S SECRET - SO SEXY WOMEN","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e343","name":"VICTORIA`S SECRET - TEASE","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e344","name":"VICTORIA`S SECRET - VERY SEXY - TOP","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e345","name":"YVES ROCHER - EVIDENCE DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e346","name":"YVES SAINT LAURENT - BLACK OPIUM DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e347","name":"YVES SAINT LAURENT - IN LOVE AGAIN DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e348","name":"YVES SAINT LAURENT - LA NUIT DE L`HOMME","cat":"Kişi","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e349","name":"YVES SAINT LAURENT - LIBRE WOMEN DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e350","name":"YVES SAINT LAURENT - MANIFESTO DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e351","name":"YVES SAINT LAURENT - MYSLF DELUX","cat":"Qadın","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e352","name":"YVES SAINT LAURENT - TUXEDO DELUX","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e353","name":"ZARA - DEAR LILAC","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e354","name":"ZARA - TUBEROSE (M)","cat":"Digər","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e355","name":"ZARKOperfume - PINK MOLéCULE 090.09","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e356","name":"ZEM - ZEM DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]},{"id":"e357","name":"ZIELINSKI & ROZEN - BLACK PEPPER DELUX","cat":"Uniseks","desc":"","variants":[{"s":"30 ml","p":20},{"s":"50 ml","p":30}]}];
+
+/* ---------------------------------------------------------- */
+const $ = id => document.getElementById(id);
+const CATS = ['Hamısı','Kişi','Qadın','Uniseks','Otaq ətirləri','Digər'];
+const PAGE = 60;
+
+const configured = SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.length > 40;
+const supa = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+let products = [];
+let cart = {};              // "id::variantIndex" -> say
+let settings = { wa:'' };
+let activeCat = 'Hamısı';
+let searchQ = '';
+let visibleCount = PAGE;
+let sel = {};
+let editingId = null;
+let pendingImg = null;      // sıxılmış fayl (dataURL)
+let session = null;
+
+/* ---------- Lokal səbət ---------- */
+function loadCart(){ try{ cart = JSON.parse(localStorage.getItem('beauty-cart')||'{}'); }catch(e){ cart = {}; } }
+function saveCart(){ try{ localStorage.setItem('beauty-cart', JSON.stringify(cart)); }catch(e){} }
+
+/* ---------- Baza (kv cədvəli) ---------- */
+async function kvGet(key){
+  if(!supa) return null;
+  const { data, error } = await supa.from('kv').select('value').eq('key', key).maybeSingle();
+  if(error){ console.error('kvGet', error); return null; }
+  return data ? data.value : null;
+}
+async function kvSet(key, value){
+  if(!supa) return false;
+  const { error } = await supa.from('kv').upsert({ key, value });
+  if(error){ console.error('kvSet', error); toast('Xəta: ' + error.message); return false; }
+  return true;
+}
+async function saveCatalog(){ return await kvSet('catalog', products); }
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+/* ---------- Yükləmə ---------- */
+async function init(){
+  $('year').textContent = new Date().getFullYear();
+  loadCart();
+
+  if(supa){
+    const [cat, st] = await Promise.all([kvGet('catalog'), kvGet('settings')]);
+    products = (cat && cat.length) ? cat : JSON.parse(JSON.stringify(SEED));
+    if(st) settings = Object.assign(settings, st);
+    const { data } = await supa.auth.getSession();
+    session = data.session || null;
+  } else {
+    products = JSON.parse(JSON.stringify(SEED));
+  }
+
+  renderChips();
+  renderGrid();
+  renderCart();
+}
+init();
+
+/* ---------- Kateqoriyalar / axtarış ---------- */
+function renderChips(){
+  $('chips').innerHTML = CATS.map(c =>
+    `<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`
+  ).join('');
+}
+$('chips').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  activeCat = b.dataset.cat; visibleCount = PAGE;
+  renderChips(); renderGrid();
+});
+$('searchInput').addEventListener('input', e=>{
+  searchQ = e.target.value.trim().toLowerCase(); visibleCount = PAGE; renderGrid();
+});
+
+/* ---------- Kataloq ---------- */
+function fmt(n){ return (Math.round(n*100)/100).toLocaleString('az-AZ',{minimumFractionDigits: n%1?2:0}); }
+function esc(s){ return String(s??'').replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+
+function filtered(){
+  return products.filter(p =>
+    (activeCat==='Hamısı' || p.cat===activeCat) &&
+    (!searchQ || (p.name+' '+(p.desc||'')).toLowerCase().includes(searchQ))
+  );
+}
+function renderGrid(){
+  const list = filtered();
+  $('countLine').textContent = list.length ? `${list.length} məhsul tapıldı` : '';
+  if(!list.length){
+    $('grid').innerHTML = `<div class="empty-state">
+      <div class="big">Məhsul tapılmadı</div>
+      <p>${products.length ? 'Axtarışı və ya kateqoriyanı dəyiş.' : 'Admin panelindən məhsul əlavə et.'}</p>
+    </div>`;
+    return;
+  }
+  const shown = list.slice(0, visibleCount);
+  let html = shown.map(cardHtml).join('');
+  if(list.length > visibleCount){
+    html += `<div class="load-more"><button class="btn ghost" id="loadMore">Daha çox göstər (${list.length - visibleCount})</button></div>`;
+  }
+  $('grid').innerHTML = html;
+}
+function cardHtml(p){
+  const hasV = p.variants && p.variants.length;
+  const vi = Math.min(sel[p.id]||0, hasV ? p.variants.length-1 : 0);
+  let foot, vRow = '';
+  if(hasV){
+    vRow = `<div class="variants">${p.variants.map((v,i)=>
+      `<button class="v-pill ${i===vi?'on':''}" data-var="${p.id}" data-vi="${i}">${esc(v.s)}</button>`).join('')}</div>`;
+    const key = p.id+'::'+vi;
+    const q = cart[key]||0;
+    foot = `<div class="card-foot">
+      <div class="price">${fmt(p.variants[vi].p)} <small>₼</small></div>
+      ${q ? stepperHtml(key,q) : `<button class="add-btn" data-add="${key}">Səbətə at</button>`}
+    </div>`;
+  } else {
+    foot = `<div class="card-foot"><div class="price">-- <small>₼</small></div></div>`;
+  }
+  const img = p.img
+    ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">`
+    : `<span class="noimg">Beauty</span>`;
+  return `<article class="card">
+    <div class="card-img">${img}</div>
+    <div class="card-body">
+      <div class="card-cat">${esc(p.cat)}</div>
+      <div class="card-name">${esc(p.name)}</div>
+      ${p.desc?`<div class="card-desc">${esc(p.desc)}</div>`:''}
+      ${vRow}
+      ${foot}
+    </div>
+  </article>`;
+}
+function stepperHtml(key,q){
+  return `<div class="stepper">
+    <button data-dec="${key}" aria-label="Azalt">−</button>
+    <span>${q}</span>
+    <button data-inc="${key}" aria-label="Artır">+</button>
+  </div>`;
+}
+$('grid').addEventListener('click', e=>{
+  const lm = e.target.closest('#loadMore');
+  if(lm){ visibleCount += PAGE; renderGrid(); return; }
+  const vp = e.target.closest('[data-var]');
+  if(vp){ sel[vp.dataset.var] = +vp.dataset.vi; renderGrid(); return; }
+  const add = e.target.closest('[data-add]');
+  const inc = e.target.closest('[data-inc]');
+  const dec = e.target.closest('[data-dec]');
+  if(add) changeQty(add.dataset.add, +1);
+  if(inc) changeQty(inc.dataset.inc, +1);
+  if(dec) changeQty(dec.dataset.dec, -1);
+});
+
+/* ---------- Səbət ---------- */
+function parseKey(key){
+  const [id, viS] = key.split('::');
+  const p = products.find(x=>x.id===id);
+  const vi = +viS;
+  if(!p || !p.variants || !p.variants[vi]) return null;
+  return {p, v: p.variants[vi], key};
+}
+function changeQty(key, d){
+  cart[key] = (cart[key]||0) + d;
+  if(cart[key]<=0) delete cart[key];
+  saveCart();
+  renderGrid(); renderCart();
+}
+function cartItems(){ return Object.entries(cart).map(([k,q])=>{ const it = parseKey(k); return it ? {...it, q} : null; }).filter(Boolean); }
+function cartTotal(){ return cartItems().reduce((s,it)=>s+it.v.p*it.q, 0); }
+
+function renderCart(){
+  const items = cartItems();
+  const n = items.reduce((a,b)=>a+b.q,0);
+  $('cartBadge').textContent = n;
+  $('cartBadge').classList.toggle('hidden', n===0);
+
+  const body = $('cartBody');
+  if(!items.length){
+    body.innerHTML = `<div class="empty-state" style="padding:40px 10px"><div class="big">Səbət boşdur</div><p>Kataloqdan ətir seç.</p></div>`;
+  } else {
+    body.innerHTML = items.map(({p,v,key,q})=>`
+      <div class="cart-item">
+        <div class="thumb">${p.img?`<img src="${esc(p.img)}" alt="">`:'🌸'}</div>
+        <div class="info">
+          <div class="n">${esc(p.name)} <span style="color:var(--gold)">· ${esc(v.s)}</span></div>
+          <div class="p">${fmt(v.p)} ₼ × ${q} = <b>${fmt(v.p*q)} ₼</b></div>
+        </div>
+        ${stepperHtml(key,q)}
+        <button class="rm-btn" data-rm="${key}" aria-label="Sil">✕</button>
+      </div>`).join('');
+  }
+  $('cartTotal').textContent = fmt(cartTotal()) + ' ₼';
+  $('sendWa').disabled = !items.length;
+}
+$('cartBody').addEventListener('click', e=>{
+  const rm = e.target.closest('[data-rm]');
+  const inc = e.target.closest('[data-inc]');
+  const dec = e.target.closest('[data-dec]');
+  if(rm){ delete cart[rm.dataset.rm]; saveCart(); renderGrid(); renderCart(); }
+  if(inc) changeQty(inc.dataset.inc, +1);
+  if(dec) changeQty(dec.dataset.dec, -1);
+});
+
+function openDrawer(o){ $('drawer').classList.toggle('open',o); $('overlay').classList.toggle('open',o); }
+$('cartBtn').onclick = ()=>openDrawer(true);
+$('closeDrawer').onclick = ()=>openDrawer(false);
+$('overlay').onclick = ()=>openDrawer(false);
+
+/* ---------- WhatsApp sifariş ---------- */
+$('sendWa').addEventListener('click', ()=>{
+  if(!settings.wa){ toast('WhatsApp nömrəsi təyin edilməyib — admin panelindən əlavə et'); return; }
+  const items = cartItems();
+  if(!items.length) return;
+
+  let msg = '🌸 *BEAUTY — Yeni sifariş*\n\n';
+  items.forEach(({p,v,q},i)=>{
+    msg += `${i+1}. ${p.name} (${v.s})\n    ${fmt(v.p)} ₼ × ${q} = ${fmt(v.p*q)} ₼\n`;
+  });
+  msg += `\n💰 *Cəmi: ${fmt(cartTotal())} ₼*\n`;
+  const name = $('custName').value.trim();
+  const note = $('custNote').value.trim();
+  if(name) msg += `\n👤 Ad: ${name}`;
+  if(note) msg += `\n📍 Qeyd: ${note}`;
+
+  window.open(`https://wa.me/${settings.wa}?text=${encodeURIComponent(msg)}`, '_blank');
+});
+
+/* =========================================================
+   ADMİN — Supabase Auth ilə
+========================================================= */
+function refreshAdminView(){
+  $('cfgWarn').style.display = configured ? 'none' : 'block';
+  const logged = !!session;
+  $('adminLogin').style.display = (configured && !logged) ? 'block' : 'none';
+  $('adminContent').style.display = (configured && logged) ? 'block' : 'none';
+  $('logoutBtn').style.display = logged ? 'inline-block' : 'none';
+  if(logged){
+    $('setWa').value = settings.wa || '';
+    renderAdminList();
+  }
+}
+$('adminOpenBtn').addEventListener('click', ()=>{
+  refreshAdminView();
+  $('adminPanel').classList.add('open');
+});
+$('adminCloseBtn').onclick = ()=>$('adminPanel').classList.remove('open');
+
+$('loginBtn').addEventListener('click', async ()=>{
+  const email = $('loginEmail').value.trim();
+  const password = $('loginPass').value;
+  if(!email || !password){ toast('E-poçt və şifrəni daxil et'); return; }
+  const { data, error } = await supa.auth.signInWithPassword({ email, password });
+  if(error){ toast('Giriş alınmadı: ' + error.message); return; }
+  session = data.session;
+  $('loginPass').value = '';
+  toast('Xoş gəldin! ✓');
+  refreshAdminView();
+});
+$('logoutBtn').addEventListener('click', async ()=>{
+  await supa.auth.signOut();
+  session = null;
+  refreshAdminView();
+});
+
+$('saveSettings').addEventListener('click', async ()=>{
+  const wa = $('setWa').value.trim().replace(/[^\d]/g,'');
+  if(wa) settings.wa = wa;
+  const ok = await kvSet('settings', settings);
+  if(ok) toast('Ayarlar yadda saxlanıldı ✓');
+});
+
+/* Şəkil sıxma (fayl) */
+$('pImg').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const img = new Image();
+  img.onload = ()=>{
+    const MAX = 700;
+    let w = img.width, h = img.height;
+    if(w>h && w>MAX){ h = h*MAX/w; w = MAX; }
+    else if(h>=w && h>MAX){ w = w*MAX/h; h = MAX; }
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    pendingImg = cv.toDataURL('image/jpeg', 0.78);
+    $('imgPreview').src = pendingImg;
+    $('previewWrap').style.display = 'block';
+  };
+  img.src = URL.createObjectURL(f);
+});
+/* URL önizləmə */
+$('pImgUrl').addEventListener('input', e=>{
+  const u = e.target.value.trim();
+  if(u && !pendingImg){
+    $('imgPreview').src = u;
+    $('previewWrap').style.display = 'block';
+  } else if(!pendingImg){
+    $('previewWrap').style.display = 'none';
+  }
+});
+
+/* Sıxılmış şəkli Supabase Storage-a yüklə, public link qaytar */
+async function uploadImage(id, dataUrl){
+  const blob = await (await fetch(dataUrl)).blob();
+  const path = id + '.jpg';
+  const { error } = await supa.storage.from('product-images').upload(path, blob, { upsert:true, contentType:'image/jpeg' });
+  if(error){ toast('Şəkil yüklənmədi: ' + error.message); return null; }
+  const { data } = supa.storage.from('product-images').getPublicUrl(path);
+  return data.publicUrl + '?v=' + Date.now();   // keş yeniləmə
+}
+
+function buildVariants(){
+  const p30 = parseFloat($('pP30').value);
+  const p50 = parseFloat($('pP50').value);
+  const v = [];
+  if(!isNaN(p30) && p30>0) v.push({s:'30 ml', p:p30});
+  if(!isNaN(p50) && p50>0) v.push({s:'50 ml', p:p50});
+  return v;
+}
+
+$('saveProduct').addEventListener('click', async ()=>{
+  const name = $('pName').value.trim();
+  const cat = $('pCat').value;
+  const desc = $('pDesc').value.trim();
+  if(!name){ toast('Məhsulun adını daxil et'); return; }
+  const variants = buildVariants();
+
+  let p;
+  if(editingId){
+    p = products.find(x=>x.id===editingId);
+    Object.assign(p, {name, cat, desc, variants});
+  } else {
+    const id = 'p' + Date.now() + Math.random().toString(36).slice(2,6);
+    p = {id, name, cat, desc, variants};
+    products.push(p);
+  }
+
+  const imgUrl = $('pImgUrl').value.trim();
+  if(pendingImg){
+    const url = await uploadImage(p.id, pendingImg);
+    if(url) p.img = url;
+  } else if(imgUrl){
+    p.img = imgUrl;
+  }
+
+  const ok = await saveCatalog();
+  if(ok) toast(editingId ? 'Məhsul yeniləndi ✓' : 'Məhsul əlavə edildi ✓');
+  resetForm(); renderAdminList(); renderGrid();
+});
+
+function resetForm(){
+  editingId = null; pendingImg = null;
+  $('pName').value=''; $('pP30').value=''; $('pP50').value=''; $('pDesc').value='';
+  $('pCat').selectedIndex = 0; $('pImg').value=''; $('pImgUrl').value='';
+  $('previewWrap').style.display='none';
+  $('formTitle').textContent = '➕ Yeni məhsul əlavə et';
+  $('cancelEdit').style.display='none';
+}
+$('cancelEdit').onclick = resetForm;
+
+/* Admin siyahısı */
+let adminQ = '';
+$('adminSearch').addEventListener('input', e=>{ adminQ = e.target.value.trim().toLowerCase(); renderAdminList(); });
+
+function renderAdminList(){
+  $('prodCount').textContent = products.length;
+  const list = adminQ ? products.filter(p=>p.name.toLowerCase().includes(adminQ)) : products;
+  $('adminList').innerHTML = list.length ? list.map(p=>{
+    const priceS = (p.variants&&p.variants.length)
+      ? p.variants.map(v=>`${v.s}: ${fmt(v.p)} ₼`).join(' · ')
+      : '-- ₼';
+    return `<div class="admin-row">
+      <div class="thumb">${p.img?`<img src="${esc(p.img)}" alt="">`:'🌸'}</div>
+      <div class="meta">
+        <div class="n">${esc(p.name)}</div>
+        <div class="s">${esc(p.cat)} · ${priceS}</div>
+      </div>
+      <button class="btn sm ghost" data-edit="${p.id}">Redaktə</button>
+      <button class="btn sm dngr" data-del="${p.id}">Sil</button>
+    </div>`;
+  }).join('') : '<p class="hint">Məhsul tapılmadı.</p>';
+}
+
+$('adminList').addEventListener('click', async e=>{
+  const ed = e.target.closest('[data-edit]');
+  const del = e.target.closest('[data-del]');
+  if(ed){
+    const p = products.find(x=>x.id===ed.dataset.edit);
+    editingId = p.id; pendingImg = null;
+    $('pName').value = p.name;
+    $('pP30').value = ''; $('pP50').value = '';
+    (p.variants||[]).forEach(v=>{
+      if(v.s.startsWith('30')) $('pP30').value = v.p;
+      if(v.s.startsWith('50')) $('pP50').value = v.p;
+    });
+    $('pCat').value = p.cat; $('pDesc').value = p.desc||'';
+    $('pImgUrl').value = (p.img && /^https?:\/\//i.test(p.img) && !p.img.includes('/product-images/')) ? p.img : '';
+    if(p.img){ $('imgPreview').src = p.img; $('previewWrap').style.display='block'; }
+    else $('previewWrap').style.display='none';
+    $('formTitle').textContent = '✏️ Məhsulu redaktə et';
+    $('cancelEdit').style.display='inline-block';
+    window.scrollTo({top:0});
+  }
+  if(del){
+    if(!confirm('Bu məhsul silinsin?')) return;
+    const id = del.dataset.del;
+    products = products.filter(x=>x.id!==id);
+    Object.keys(cart).forEach(k=>{ if(k.startsWith(id+'::')) delete cart[k]; });
+    saveCart();
+    const ok = await saveCatalog();
+    renderAdminList(); renderGrid(); renderCart();
+    if(ok) toast('Məhsul silindi');
+  }
+});
+
+/* CSV import: Ad;Q30;Q50;Kateqoriya;Təsvir;ŞəkilLinki */
+$('importCsv').addEventListener('click', async ()=>{
+  const raw = $('csvInput').value.trim();
+  if(!raw){ toast('CSV mətni boşdur'); return; }
+  const lines = raw.split(/\r?\n/).filter(l=>l.trim());
+  let ok=0, bad=0;
+  for(const line of lines){
+    const [name, p30S, p50S, cat, desc, imgUrl] = line.split(';').map(s=>(s||'').trim());
+    if(!name){ bad++; continue; }
+    const v = [];
+    const p30 = parseFloat((p30S||'').replace(',','.'));
+    const p50 = parseFloat((p50S||'').replace(',','.'));
+    if(!isNaN(p30) && p30>0) v.push({s:'30 ml',p:p30});
+    if(!isNaN(p50) && p50>0) v.push({s:'50 ml',p:p50});
+    const id = 'p' + Date.now() + Math.random().toString(36).slice(2,6);
+    const np = {id, name, cat: CATS.includes(cat)?cat:'Digər', desc:desc||'', variants:v};
+    if(imgUrl && /^https?:\/\//i.test(imgUrl)) np.img = imgUrl;
+    products.push(np);
+    ok++;
+  }
+  const saved = await saveCatalog();
+  $('csvInput').value='';
+  renderAdminList(); renderGrid();
+  if(saved) toast(`İmport bitdi: ${ok} əlavə edildi${bad?`, ${bad} sətir xətalı`:''}`);
+});
+
+/* Kataloqu sıfırla */
+$('resetCatalog').addEventListener('click', async ()=>{
+  if(!confirm('Bütün dəyişikliklər silinib ilkin 357 məhsulluq siyahı bərpa olunsun?')) return;
+  products = JSON.parse(JSON.stringify(SEED));
+  const ok = await saveCatalog();
+  renderAdminList(); renderGrid();
+  if(ok) toast('Kataloq ilkin siyahıya qaytarıldı');
+});
+
+</script>
+</body>
+</html>
